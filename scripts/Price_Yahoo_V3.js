@@ -17,7 +17,7 @@ javascript:(async()=>{
   for (let kode of list) {
     await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
     try {
-      const url = `https://query2.finance.yahoo.com/v8/finance/chart/${kode}.JK?interval=1d&range=1d`;
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${kode}.JK?interval=1d&range=1d`;
       const res = await fetch(url, {
         headers: { "User-Agent": "Mozilla/5.0" }
       });
@@ -95,3 +95,4 @@ javascript:(async()=>{
     alert("❌ Gagal salin: " + e.message);
   }
 })();
+
