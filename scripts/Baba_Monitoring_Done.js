@@ -4,8 +4,10 @@
   if (window[K] && window[K].aktif) { window[K].stop(); return; }
 
   /* ===== Pengaturan ===== */
-  var INTERVAL_DETIK = 120;   /* jeda scraping */
+  var INTERVAL_DETIK = 60;   /* jeda scraping */
   var LOT_SAHAM = 100;       /* 1 lot = 100 lembar */
+  var TUNGGU_DETIK = 3;      /* waktu tunggu setelah "memancing fokus" sebelum membaca angka */
+  var ANTI_BLUR = true;      /* true = halaman tidak diberi tahu saat jendela kehilangan fokus */
 
   var S = window[K] = {
     aktif: true, timer: null, last: null, log: [], ctx: null, badge: null
@@ -92,8 +94,20 @@
     if (S.badge) S.badge.textContent = teks;
   }
 
-  /* ===== 3. MEMORY + 4. COMPARE ===== */
+  /* ===== PANCING FOKUS: halaman dibuat "merasa" sedang aktif ===== */
+  function pancingFokus() {
+    try { window.dispatchEvent(new Event("focus")); } catch (e) {}
+    try { document.dispatchEvent(new Event("focus")); } catch (e) {}
+    try { document.dispatchEvent(new Event("visibilitychange")); } catch (e) {}
+  }
+
   function cek() {
+    pancingFokus();
+    setTimeout(function () { if (S.aktif) proses(); }, TUNGGU_DETIK * 1000);
+  }
+
+  /* ===== 3. MEMORY + 4. COMPARE ===== */
+  function proses() {
     var n = scrape();
     var kunci = [n.lotB, n.lotJ, n.nilB, n.nilJ].join("|");
 
@@ -129,6 +143,8 @@
   S.stop = function () {
     S.aktif = false;
     clearInterval(S.timer);
+    try { window.removeEventListener("blur", S.blok, true); } catch (e) {}
+    try { delete document.hasFocus; delete document.hidden; delete document.visibilityState; } catch (e) {}
     if (S.badge) S.badge.remove();
     if (S.ctx) { try { S.ctx.close(); } catch (e) {} }
     catat("Monitoring DIHENTIKAN");
@@ -138,6 +154,15 @@
   if ("Notification" in window && Notification.permission === "default") {
     Notification.requestPermission();
   }
+
+  /* ===== TOPENG FOKUS: halaman selalu melapor "saya aktif & terlihat" ===== */
+  S.blok = function (e) { if (e.target === window) e.stopImmediatePropagation(); };
+  try {
+    Object.defineProperty(document, "hasFocus", { value: function () { return true; }, configurable: true });
+    Object.defineProperty(document, "hidden", { get: function () { return false; }, configurable: true });
+    Object.defineProperty(document, "visibilityState", { get: function () { return "visible"; }, configurable: true });
+  } catch (e) { console.warn("Topeng fokus gagal:", e); }
+  if (ANTI_BLUR) window.addEventListener("blur", S.blok, true);
 
   var b = document.createElement("div");
   b.style.cssText = "position:fixed;right:10px;bottom:10px;z-index:2147483647;background:#0a5;color:#fff;" +
