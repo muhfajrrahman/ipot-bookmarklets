@@ -237,7 +237,7 @@
   if (ANTI_BLUR) window.addEventListener("blur", S.blok, true);
 
   var b = document.createElement("div");
-  b.style.cssText = "position:fixed;right:10px;bottom:10px;z-index:2147483647;background:#0a5;color:#fff;" +
+  b.style.cssText = "position:fixed;top:8px;left:50%;transform:translateX(-50%);white-space:nowrap;z-index:2147483647;background:#0a5;color:#fff;" +
     "font:12px Arial;padding:6px 10px;border-radius:6px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)";
   b.onclick = function () { S.stop(); };
   document.body.appendChild(b);
